@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  weather-bot:
+    image: weather-telegram-bot:latest
+    container_name: weather_telegram_bot
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - CHAT_ID=${CHAT_ID}
+      - CITY=${CITY:-Madrid,ES}
+      - TIME_SEND_MESSAGE=${TIME_SEND_MESSAGE:-07:00}
+      - TIMEZONE=${TIMEZONE:-Europe/Madrid}
+    restart: unless-stopped

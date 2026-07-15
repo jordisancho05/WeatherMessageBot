@@ -1,0 +1,17 @@
+# Imagen base con Python
+FROM python:3.11-slim
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Copiar dependencias
+COPY requirements.txt .
+
+# Instalar dependencias
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el resto del código
+COPY weather_bot.py .
+
+# Comando por defecto (puedes ajustarlo según tu script principal)
+CMD ["python", "weather_bot.py"]

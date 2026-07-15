@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Project-specific virtual environment
+weathermessagebot/
