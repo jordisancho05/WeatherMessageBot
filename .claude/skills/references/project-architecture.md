@@ -3,7 +3,7 @@
 > Detailed architecture. Day-to-day rules live in `CLAUDE.md` (repo root).
 
 Telegram bot in Python. Once a day, at a configurable local time, it fetches the current weather and a
-5-day forecast from OpenWeatherMap, builds a Spanish Markdown message (temperature, conditions, rain
+5-day forecast from OpenWeatherMap, builds a Spanish message (temperature, conditions, rain
 chance, a recommendation) and sends it to a Telegram chat.
 
 ## Package map (`src/weather_message_bot/`)
@@ -15,12 +15,13 @@ chance, a recommendation) and sends it to a Telegram chat.
   `TELEGRAM_TOKEN`, `WEATHER_API_KEY`, `CHAT_ID`. Optional with defaults: `CITY` (`Madrid,ES`),
   `TIME_SEND_MESSAGE` (`07:00`), `TIMEZONE` (`Europe/Madrid`). Missing a required var fails loudly.
 - `weather.py` — async OpenWeatherMap client: `get_weather_data()` (current) and
-  `get_forecast_data()` (5-day / 3h). **Graceful degradation**: return `None` + log on HTTP
-  401/404/other, never raise.
-- `formatting.py` — pure functions: rain-probability from the next 24h (8×3h) of forecast, weather
-  emoji from the description, and `format_weather_message()` building the Spanish Markdown body.
+  `get_forecast_data()` (5-day / 3h), both bounded by a 10s `ClientTimeout`. **Graceful degradation**:
+  return `None` + log on HTTP 401/404/other, never raise.
+- `formatting.py` — pure functions: rain probability = max `pop` among today's next-24h (8×3h)
+  intervals, weather emoji from the description, and `format_weather_message()` building the Spanish
+  body (HTML parse mode; API-provided fields `html.escape`d).
 - `telegram_sender.py` — wraps `telegram.Bot`; `send_weather_message()` orchestrates fetch → format →
-  `send_message(parse_mode='Markdown')`, and on failure still tries to notify the chat of the error.
+  `send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic message.
 - `scheduler.py` — converts the local `TIME_SEND_MESSAGE` to UTC, registers the daily `schedule` job,
   loops `run_pending()` every 60s; bridges sync `schedule` to the async send on a fresh event loop.
 

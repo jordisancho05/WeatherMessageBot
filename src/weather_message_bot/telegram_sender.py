@@ -24,14 +24,15 @@ async def send_weather_message(settings: Settings, tz, bot: Bot | None = None) -
         forecast_data = await weather.get_forecast_data(settings.city, settings.weather_api_key)
         message = formatting.format_weather_message(weather_data, forecast_data, tz)
 
-        await bot.send_message(chat_id=settings.chat_id, text=message, parse_mode="Markdown")
+        await bot.send_message(chat_id=settings.chat_id, text=message, parse_mode="HTML")
         logger.info("Weather message sent successfully")
-    except Exception as exc:
+    except Exception:
+        # Log the full detail; send the chat only a generic message (no internal detail leaked).
         logger.exception("Failed to send weather message")
         try:
             await bot.send_message(
                 chat_id=settings.chat_id,
-                text=f"❌ Error al obtener información meteorológica: {exc}",
+                text="❌ No se pudo obtener la información meteorológica. Inténtalo más tarde.",
             )
         except Exception:
             logger.exception("Failed to send the error notification too")

@@ -10,6 +10,11 @@ _CURRENT = re.compile(r"^https://api\.openweathermap\.org/data/2\.5/weather.*")
 _FORECAST = re.compile(r"^https://api\.openweathermap\.org/data/2\.5/forecast.*")
 
 
+def test_requests_use_a_timeout():
+    """A total timeout is configured so a hung request cannot block the daily loop."""
+    assert weather._TIMEOUT.total == 10
+
+
 async def test_get_weather_data_returns_json_on_200():
     payload = {"main": {"temp": 20.0}, "name": "Madrid"}
     with aioresponses() as mocked:

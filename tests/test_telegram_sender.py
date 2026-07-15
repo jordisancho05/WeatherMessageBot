@@ -34,20 +34,21 @@ async def test_sends_formatted_message_as_markdown(monkeypatch):
     bot.send_message.assert_awaited_once()
     kwargs = bot.send_message.await_args.kwargs
     assert kwargs["chat_id"] == "123"
-    assert kwargs["parse_mode"] == "Markdown"
+    assert kwargs["parse_mode"] == "HTML"
     assert "Madrid" in kwargs["text"]
 
 
-async def test_send_failure_triggers_error_notification(monkeypatch):
+async def test_send_failure_notifies_chat_without_leaking_detail(monkeypatch):
     _stub_weather(monkeypatch)
     bot = AsyncMock()
-    bot.send_message = AsyncMock(side_effect=[RuntimeError("boom"), None])
+    bot.send_message = AsyncMock(side_effect=[RuntimeError("boom secret detail"), None])
 
     await telegram_sender.send_weather_message(_SETTINGS, _TZ, bot=bot)
 
     assert bot.send_message.await_count == 2
-    error_call = bot.send_message.await_args_list[1]
-    assert "❌" in error_call.kwargs["text"]
+    error_text = bot.send_message.await_args_list[1].kwargs["text"]
+    assert "❌" in error_text
+    assert "boom secret detail" not in error_text  # internal detail stays in the log
 
 
 async def test_secondary_failure_is_swallowed(monkeypatch):

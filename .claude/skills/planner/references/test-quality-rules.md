@@ -18,7 +18,7 @@ defines **how the tests themselves are written**.
   **never hit the real API**. Assert the parsed result and the graceful-degradation path (HTTP
   401/404/error → returns `None`, no exception). E.g. `tests/test_weather.py`.
 - **Telegram sender** (`telegram_sender.py`) → mock the `Bot` with `unittest.mock.AsyncMock`; assert
-  `send_message` is called with the expected `chat_id`, text and `parse_mode='Markdown'`, and that a
+  `send_message` is called with the expected `chat_id`, text and `parse_mode='HTML'`, and that a
   send failure still tries the error-notification path. E.g. `tests/test_telegram_sender.py`.
 - **Config** (`config.py`) → `monkeypatch.setenv` / `delenv`; assert defaults, and that a missing
   required var (`TELEGRAM_TOKEN`, `WEATHER_API_KEY`, `CHAT_ID`) fails loudly. E.g. `tests/test_config.py`.

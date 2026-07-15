@@ -39,9 +39,11 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
 - `weather.py` — async `get_weather_data()` / `get_forecast_data()`; return `None` and **log** on
   HTTP 401/404/other, never raise.
 - `formatting.py` — pure `rain_probability()`, `weather_emoji()`, `recommendation()`,
-  `format_weather_message()` (Spanish Markdown; rain chance from the next 24h = 8 × 3h intervals).
+  `format_weather_message()` (Spanish, HTML parse mode; rain chance = max `pop` among today's next-24h
+  intervals). API-provided fields are `html.escape`d.
 - `telegram_sender.py` — `send_weather_message()` orchestrates fetch → format →
-  `bot.send_message(parse_mode='Markdown')`; on failure still notifies the chat of the error.
+  `bot.send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic
+  message (no internal detail leaked).
 - `scheduler.py` — `to_utc()` + `schedule_daily_message()` (registers the daily job, loops
   `run_pending()` every 60s; bridges sync `schedule` to the async send on a fresh loop).
 - `__main__.py` — `main()` (parses `--test`, `WindowsSelectorEventLoopPolicy` on win32, loads `.env`,

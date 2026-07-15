@@ -17,15 +17,12 @@ _WEATHER = {
 }
 
 
-def _forecast_with_rain(n_rain: int):
-    """Build a `list` of 8 3h intervals dated today, `n_rain` of them carrying rain."""
-    day = _NOW.strftime("%Y-%m-%d")
-    items = []
-    for i in range(8):
-        entry = {"dt_txt": f"{day} {i * 3:02d}:00:00"}
-        if i < n_rain:
-            entry["rain"] = {"3h": 1.0}
-        items.append(entry)
+def _forecast_with_pops(pops: list[float], day: str | None = None):
+    """Build a `list` of 3h intervals dated `day` (today by default) with the given `pop` values."""
+    day = day or _NOW.strftime("%Y-%m-%d")
+    items = [
+        {"dt_txt": f"{day} {i * 3:02d}:00:00", "pop": pop} for i, pop in enumerate(pops)
+    ]
     return {"list": items}
 
 
@@ -42,6 +39,15 @@ def test_message_includes_core_fields():
     assert "65%" in msg
     assert "(Europe/Madrid)" in msg
     assert "07:00" in msg
+    assert "<b>" in msg  # rendered as HTML
+
+
+def test_dynamic_fields_are_html_escaped():
+    """API-provided fields with HTML-special chars are escaped, not injected raw."""
+    weather = {**_WEATHER, "name": "Tom & Jerry"}
+    msg = formatting.format_weather_message(weather, None, _TZ, now=_NOW)
+    assert "Tom &amp; Jerry" in msg
+    assert "Tom & Jerry" not in msg
 
 
 @pytest.mark.parametrize(
@@ -55,9 +61,13 @@ def test_rain_probability_zero_cases(forecast, expected):
     assert formatting.rain_probability(forecast, _NOW) == expected
 
 
-def test_rain_probability_counts_today_rain_over_window():
-    # 2 rainy intervals out of an 8-interval window -> 25%
-    assert formatting.rain_probability(_forecast_with_rain(2), _NOW) == 25.0
+def test_rain_probability_uses_max_pop_of_today():
+    # highest probability of precipitation among today's intervals -> 40%
+    assert formatting.rain_probability(_forecast_with_pops([0.1, 0.4, 0.2]), _NOW) == 40.0
+
+
+def test_rain_probability_ignores_other_days():
+    assert formatting.rain_probability(_forecast_with_pops([0.9], day="2020-01-01"), _NOW) == 0.0
 
 
 @pytest.mark.parametrize(

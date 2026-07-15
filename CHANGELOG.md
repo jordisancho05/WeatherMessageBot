@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 10s request timeout (`aiohttp.ClientTimeout`) on the OpenWeatherMap calls so a hung connection
+  cannot block the daily loop.
+
+### Changed
+- Weather message now uses Telegram **HTML** parse mode with API-provided fields `html.escape`d, so a
+  `_ * [ <` in a city name or description can no longer break (or inject into) the message.
+- Rain probability is now the max `pop` (probability of precipitation) among today's forecast
+  intervals, instead of the fraction of intervals carrying a `rain` key.
+
+### Fixed
+- On a send failure the chat now receives a generic message; the internal exception detail stays in
+  the log instead of being sent to the user.
+
 ## [0.1.0] - 2026-07-15
 
 ### Added

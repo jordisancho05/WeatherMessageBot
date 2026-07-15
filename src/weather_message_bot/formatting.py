@@ -6,27 +6,22 @@ User-facing text stays in Spanish; code and docstrings in English.
 
 from __future__ import annotations
 
+import html
 from datetime import datetime
 
 _NO_WEATHER = "❌ No se pudo obtener información meteorológica"
 
 
 def rain_probability(forecast_data: dict | None, now: datetime) -> float:
-    """Percentage of today's next-24h intervals (max 8×3h) that carry rain."""
+    """Highest probability of precipitation (``pop``) among today's next-24h intervals (8×3h)."""
     if not forecast_data:
         return 0.0
     window = forecast_data.get("list", [])[:8]
-    if not window:
-        return 0.0
     current_date = now.strftime("%Y-%m-%d")
-    today_rain = [
-        entry
-        for entry in window
-        if entry.get("dt_txt", "")[:10] == current_date and "rain" in entry
-    ]
-    if not today_rain:
+    today = [entry for entry in window if entry.get("dt_txt", "")[:10] == current_date]
+    if not today:
         return 0.0
-    return len(today_rain) / len(window) * 100
+    return max(entry.get("pop", 0) for entry in today) * 100
 
 
 def weather_emoji(description: str) -> str:
@@ -46,10 +41,10 @@ def weather_emoji(description: str) -> str:
 def recommendation(probability: float) -> str:
     """Spanish recommendation line based on the rain probability."""
     if probability > 50:
-        return "☂️ **Recomendación:** ¡No olvides llevar paraguas hoy!"
+        return "☂️ <b>Recomendación:</b> ¡No olvides llevar paraguas hoy!"
     if probability > 20:
-        return "🌦️ **Recomendación:** Posibilidad de lluvia, considera llevar paraguas"
-    return "☀️ **Recomendación:** Día sin lluvia prevista, ¡disfruta!"
+        return "🌦️ <b>Recomendación:</b> Posibilidad de lluvia, considera llevar paraguas"
+    return "☀️ <b>Recomendación:</b> Día sin lluvia prevista, ¡disfruta!"
 
 
 def format_weather_message(
@@ -73,13 +68,17 @@ def format_weather_message(
     probability = rain_probability(forecast_data, now)
     emoji = weather_emoji(description)
 
-    message = f"""🌤️ **Buenos días! Aquí tienes el clima de hoy**
+    # HTML parse mode: escape API-provided fields so `< > &` can't break or inject markup.
+    safe_city = html.escape(city_name)
+    safe_description = html.escape(description)
 
-📍 **{city_name}**
-🌡️ **Temperatura:** {temp:.1f}°C (se siente como {feels_like:.1f}°C)
-{emoji} **Condiciones:** {description}
-💧 **Humedad:** {humidity}%
-🌧️ **Probabilidad de lluvia:** {probability:.0f}%
+    message = f"""🌤️ <b>Buenos días! Aquí tienes el clima de hoy</b>
+
+📍 <b>{safe_city}</b>
+🌡️ <b>Temperatura:</b> {temp:.1f}°C (se siente como {feels_like:.1f}°C)
+{emoji} <b>Condiciones:</b> {safe_description}
+💧 <b>Humedad:</b> {humidity}%
+🌧️ <b>Probabilidad de lluvia:</b> {probability:.0f}%
 
 """
     message += recommendation(probability)
