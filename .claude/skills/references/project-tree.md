@@ -22,7 +22,7 @@ PWeatherMessageBot/
 │       ├── weather.py                # OpenWeatherMap async client
 │       ├── formatting.py             # Message building (Spanish) + rain calc + emoji
 │       ├── telegram_sender.py        # Send + error notification
-│       └── scheduler.py              # Local→UTC + daily job loop
+│       └── scheduler.py              # Timezone-aware daily job registration + loop
 ├── tests/
 │   ├── conftest.py
 │   ├── test_config.py

@@ -21,11 +21,12 @@
    `parametrize` case if it branches.
 
 ## Change the schedule / time handling
-1. `scheduler.py` → the daily job registration and the local→UTC conversion live here.
-2. Keep `pytz`: convert the configured local `TIME_SEND_MESSAGE` to UTC before registering; the message
-   still displays the local time + zone.
-3. Test: `tests/test_scheduler.py` → assert the UTC string computed for a known local time + zone
-   (no real sleeping; don't run the 60s loop).
+1. `scheduler.py` → the daily job registration lives here.
+2. Register with `schedule.every().day.at(TIME_SEND_MESSAGE, TIMEZONE)` — pass the zone so `schedule`
+   resolves it correctly on a local or a UTC/Docker clock. Don't reintroduce manual UTC math. The
+   message still displays the local time + zone.
+3. Test: `tests/test_scheduler.py` → schedule the job with `block=False` and assert `schedule.jobs[0]`
+   has the expected `at_time` and `at_time_zone` (machine-independent; don't run the loop).
 
 ## Add a command-line flag
 1. `__main__.py` → parse `sys.argv` (or `argparse`); keep `--test` behavior intact.

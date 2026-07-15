@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - On a send failure the chat now receives a generic message; the internal exception detail stays in
   the log instead of being sent to the user.
+- **Daily job fired at the wrong time when not running in UTC.** The schedule was computed by
+  converting the local time to UTC and handing the UTC string to `schedule`, which fires against the
+  *host* clock — so on a machine whose clock isn't UTC (e.g. a local run in `Europe/Madrid`) the job
+  ran offset by the UTC difference (and often skipped to the next day). Now the job is registered with
+  `schedule.every().day.at(TIME_SEND_MESSAGE, TIMEZONE)`, timezone-aware and correct on both a local
+  and a UTC/Docker clock. The loop also polls every 20s instead of 60s.
 
 ## [0.1.0] - 2026-07-15
 

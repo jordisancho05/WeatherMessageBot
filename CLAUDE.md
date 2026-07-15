@@ -48,8 +48,10 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
 - `telegram_sender.py` — `send_weather_message()` orchestrates fetch → format →
   `bot.send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic
   message (no internal detail leaked).
-- `scheduler.py` — `to_utc()` (local→UTC) + `schedule_daily_message()` (registers the daily job,
-  loops `run_pending()` every 60s; bridges sync `schedule` to the async send on a fresh loop).
+- `scheduler.py` — `schedule_daily_message()` registers the daily job at the local
+  `TIME_SEND_MESSAGE` **in the configured timezone** (via `schedule`'s native tz support — correct on
+  a local or a UTC/Docker clock), loops `run_pending()`; bridges sync `schedule` to the async send on
+  a fresh loop.
 - `__main__.py` — `main()` parses `--test`, forces `WindowsSelectorEventLoopPolicy` on win32, loads
   `.env`, builds `Settings`, runs the scheduler or the one-shot send. `__init__.py` exposes
   `__version__` (from installed metadata).
@@ -57,7 +59,8 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
 ## Conventions
 - Read config from the `Settings` object, never scattered `os.getenv`. New code logs via `logging`,
   not `print`. Type-hint new public functions.
-- Times use `pytz`; the scheduler works in UTC internally but the message shows the local time/zone.
+- Times use `pytz`; scheduling is timezone-aware via `schedule`'s tz support (no manual UTC math), and
+  the message shows the local time/zone.
 - Network failures degrade gracefully (return `None`, log, still try to notify the chat of the
   error) — keep that pattern; a failed API call must not crash the daily loop.
 - Version is single-sourced in `pyproject.toml` (SemVer); changes tracked in `CHANGELOG.md`.

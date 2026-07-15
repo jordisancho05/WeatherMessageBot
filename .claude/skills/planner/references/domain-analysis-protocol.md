@@ -8,7 +8,7 @@
   `weather.py`, `formatting.py`.
 - **telegram** — sending messages to the chat, bot interaction, error notification. Files:
   `telegram_sender.py`.
-- **scheduling** — the daily job, local↔UTC conversion, timezone handling, the run loop. Files:
+- **scheduling** — the daily job, timezone-aware registration, the run loop. Files:
   `scheduler.py`.
 - **general** — cross-cutting: config/env (`config.py`), CLI entry (`__main__.py`), packaging
   (`pyproject.toml`), CI (`.github/workflows/`), docs (`README.md`, `CLAUDE.md`), tooling, versioning.

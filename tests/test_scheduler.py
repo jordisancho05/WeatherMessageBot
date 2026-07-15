@@ -1,22 +1,34 @@
-"""Tests for the local->UTC conversion used to register the daily job."""
+"""Tests for daily-job registration (timezone-aware, machine-independent)."""
 
-from datetime import date
+from datetime import time
 
 import pytz
+import schedule
 
 from weather_message_bot import scheduler
+from weather_message_bot.config import Settings
 
 
-def test_to_utc_madrid_summer_is_utc_plus_2():
+def test_registers_one_job_at_the_configured_local_time_and_zone():
+    """The job is registered at the local wall-clock time in the configured zone.
+
+    This does not depend on the host clock: `schedule` stores the literal time and the timezone,
+    so it fires at 03:42 Europe/Madrid whether the machine runs in Madrid or UTC (Docker).
+    """
+    schedule.clear()
+    settings = Settings(
+        telegram_token="t",
+        weather_api_key="k",
+        chat_id="123",
+        time_send_message="03:42",
+        timezone="Europe/Madrid",
+    )
     tz = pytz.timezone("Europe/Madrid")
-    assert scheduler.to_utc("07:00", tz, on_date=date(2026, 7, 15)) == "05:00"
 
+    scheduler.schedule_daily_message(settings, tz, block=False)
 
-def test_to_utc_madrid_winter_is_utc_plus_1():
-    tz = pytz.timezone("Europe/Madrid")
-    assert scheduler.to_utc("07:00", tz, on_date=date(2026, 1, 15)) == "06:00"
-
-
-def test_to_utc_identity_for_utc_zone():
-    tz = pytz.timezone("UTC")
-    assert scheduler.to_utc("07:00", tz, on_date=date(2026, 7, 15)) == "07:00"
+    assert len(schedule.jobs) == 1
+    job = schedule.jobs[0]
+    assert job.at_time == time(3, 42)
+    assert job.at_time_zone.zone == "Europe/Madrid"
+    schedule.clear()

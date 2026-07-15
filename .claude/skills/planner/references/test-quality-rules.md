@@ -10,7 +10,7 @@ subtask. Build/test via `@.claude/skills/references/common-commands.md` (`pytest
 defines **how the tests themselves are written**.
 
 ## Style per layer
-- **Pure logic / formatting** (`formatting.py`, rain-probability calc, UTC conversion) → plain
+- **Pure logic / formatting** (`formatting.py`, rain-probability calc) → plain
   `pytest` unit tests, no I/O. Feed sample dicts (the shape OpenWeatherMap returns), assert on the
   output string/number. Use `@pytest.mark.parametrize` for the emoji/recommendation branches.
   E.g. `tests/test_formatting.py`.

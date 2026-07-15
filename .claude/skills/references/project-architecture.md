@@ -22,13 +22,15 @@ chance, a recommendation) and sends it to a Telegram chat.
   body (HTML parse mode; API-provided fields `html.escape`d).
 - `telegram_sender.py` — wraps `telegram.Bot`; `send_weather_message()` orchestrates fetch → format →
   `send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic message.
-- `scheduler.py` — converts the local `TIME_SEND_MESSAGE` to UTC, registers the daily `schedule` job,
-  loops `run_pending()` every 60s; bridges sync `schedule` to the async send on a fresh event loop.
+- `scheduler.py` — `schedule_daily_message()` registers the daily `schedule` job at the local
+  `TIME_SEND_MESSAGE` in the configured timezone (via `schedule`'s native tz support, correct on a
+  local or a UTC/Docker clock); loops `run_pending()`; bridges sync `schedule` to the async send on a
+  fresh event loop.
 
 ## Layering
 `config` → `weather` (client) + `formatting` (pure) → `telegram_sender` (send) → `scheduler` (cron
-loop) → `__main__` (CLI). Times use `pytz`; the scheduler works in UTC internally but the message
-shows the local time and zone. Network failures degrade gracefully and must never crash the daily
+loop) → `__main__` (CLI). Times use `pytz`; scheduling is timezone-aware via `schedule`'s tz support
+and the message shows the local time and zone. Network failures degrade gracefully and must never crash the daily
 loop.
 
 ## Stack and versioning

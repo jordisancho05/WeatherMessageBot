@@ -28,8 +28,9 @@
   `None`. A new call that can crash the scheduler is a blocker.
 
 ## Timezone
-- Time math goes through `pytz`; the local `TIME_SEND_MESSAGE` is converted to UTC for scheduling and
-  the message shows the local zone. No second, inline source of "now".
+- Scheduling passes the zone to `schedule.every().day.at(time, tz)` (correct on a local or UTC/Docker
+  clock); no manual local→UTC math, which is wrong when the host clock isn't UTC. The message shows
+  the local zone. No second, inline source of "now".
 
 ## Telegram
 - `send_message` uses the intended `parse_mode`; text that interpolates API fields into Markdown is

@@ -1,7 +1,8 @@
 """Daily scheduling.
 
-The configured local ``TIME_SEND_MESSAGE`` is converted to UTC before registering the job; the
-message itself still displays the local time and zone (see `formatting`).
+The daily job is registered at the configured local ``TIME_SEND_MESSAGE`` **in the configured
+timezone**: `schedule` (>=1.2) resolves it against the given zone, so it fires at the right
+wall-clock time whether the host runs in that timezone (local) or in UTC (Docker).
 """
 
 from __future__ import annotations
@@ -9,9 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from datetime import date, datetime
 
-import pytz
 import schedule
 
 from . import telegram_sender
@@ -19,13 +18,8 @@ from .config import Settings
 
 logger = logging.getLogger(__name__)
 
-
-def to_utc(time_send: str, tz, on_date: date | None = None) -> str:
-    """Convert a local ``HH:MM`` for ``tz`` into the equivalent UTC ``HH:MM``."""
-    on_date = on_date or datetime.now().date()
-    local_time = datetime.strptime(time_send, "%H:%M").time()
-    local_aware = tz.localize(datetime.combine(on_date, local_time))
-    return local_aware.astimezone(pytz.UTC).strftime("%H:%M")
+# How often the loop checks for due jobs (seconds).
+_POLL_SECONDS = 20
 
 
 def _run_once(settings: Settings, tz) -> None:
@@ -39,15 +33,13 @@ def _run_once(settings: Settings, tz) -> None:
 
 
 def schedule_daily_message(settings: Settings, tz, *, block: bool = True) -> None:
-    """Register the daily job at the configured time and (by default) run the loop forever."""
-    utc_str = to_utc(settings.time_send_message, tz)
-    schedule.every().day.at(utc_str).do(_run_once, settings, tz)
+    """Register the daily job at the configured time/zone and (by default) run the loop forever."""
+    schedule.every().day.at(settings.time_send_message, settings.timezone).do(
+        _run_once, settings, tz
+    )
     logger.info(
-        "Scheduled daily message at %s (%s) -> %s UTC",
-        settings.time_send_message,
-        tz.zone,
-        utc_str,
+        "Scheduled daily message at %s (%s)", settings.time_send_message, settings.timezone
     )
     while block:
         schedule.run_pending()
-        time.sleep(60)
+        time.sleep(_POLL_SECONDS)
