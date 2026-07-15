@@ -1,17 +1,15 @@
-# Imagen base con Python
+# Python base image
 FROM python:3.11-slim
 
-# Establecer directorio de trabajo
+# Working directory
 WORKDIR /app
 
-# Copiar dependencias
-COPY requirements.txt .
+# Copy the package metadata and sources
+COPY pyproject.toml README.md ./
+COPY src ./src
 
-# Instalar dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+# Install the package (and its runtime dependencies) from pyproject.toml
+RUN pip install --no-cache-dir .
 
-# Copiar el resto del código
-COPY weather_bot.py .
-
-# Comando por defecto (puedes ajustarlo según tu script principal)
-CMD ["python", "weather_bot.py"]
+# Run the bot as a module
+CMD ["python", "-m", "weather_message_bot"]

@@ -22,6 +22,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Read version from pyproject
+        id: version
+        run: |
+          VERSION=$(grep -m1 '^version = ' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -45,6 +51,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
             ${{ env.IMAGE }}:${{ github.sha }}
           # Cache layers (pip deps) between runs
           cache-from: type=gha

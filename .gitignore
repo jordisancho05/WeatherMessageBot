@@ -221,5 +221,4 @@ __marimo__/
 .DS_Store
 Thumbs.db
 
-# Project-specific virtual environment
-weathermessagebot/
+.plan/

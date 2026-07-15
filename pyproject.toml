@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "weather-message-bot"
+version = "0.1.0"
+description = "Telegram bot that sends a daily weather message from OpenWeatherMap."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "jordisancho05" }]
+dependencies = [
+    "python-telegram-bot==20.7",
+    "aiohttp==3.9.1",
+    "schedule==1.2.0",
+    "python-dotenv==1.0.0",
+    "pytz==2025.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "aioresponses>=0.7.6",
+    "ruff>=0.5",
+    "bump-my-version>=0.28",
+]
+
+[project.scripts]
+weather-message-bot = "weather_message_bot.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/weather_message_bot"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+allow_dirty = false
+commit = true
+tag = true
+tag_name = "v{new_version}"
+message = "chore: bump version {current_version} -> {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"

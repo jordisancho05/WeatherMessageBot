@@ -42,9 +42,13 @@ This Telegram bot automatically sends you a message every day (7:00 AM by defaul
 
 1. **Clone or download the project**
 
-2. **Install the dependencies**
+2. **Install the package** (dependencies come from `pyproject.toml`)
    ```bash
-   pip install -r requirements.txt
+   pip install .
+   ```
+   For development (editable install + test/lint tools):
+   ```bash
+   pip install -e ".[dev]"
    ```
 
 3. **Configure the bot**
@@ -76,15 +80,17 @@ This Telegram bot automatically sends you a message every day (7:00 AM by defaul
 
 ### Run the Bot
 ```bash
-python weather_bot.py
+python main.py
 ```
+Equivalent alternatives: `python -m weather_message_bot` or the installed console script
+`weather-message-bot`.
 
 The bot will start and wait until the configured time to send the first message, then keep sending daily messages.
 
 ### Test Mode
 To check that everything works correctly:
 ```bash
-python weather_bot.py --test
+python main.py --test
 ```
 
 This sends a message immediately to verify the configuration.
@@ -98,7 +104,7 @@ The project includes a `DockerFile` and a `docker-compose.yaml` so you can run t
    docker build -f DockerFile -t weather-telegram-bot:latest .
    ```
 
-2. **Configure your credentials** in `docker-compose.yaml` (the `environment` section) or point it to your `.env` file.
+2. **Configure your credentials** in a `.env` file; `docker-compose.yaml` reads them via `${VAR}` substitution.
 
 3. **Start the bot**
    ```bash
@@ -129,17 +135,38 @@ The container is set to `restart: unless-stopped`, so it will keep running and r
 Set `TIME_SEND_MESSAGE` in your `.env` file (format: `HH:MM`).
 
 ### Change the message format
-Edit the `format_weather_message()` function in `weather_bot.py`.
+Edit the `format_weather_message()` function in `src/weather_message_bot/formatting.py`.
 
 ### Add more cities
 You can create multiple configurations or modify the code to support several cities.
+
+## Development
+
+```bash
+pip install -e ".[dev]"   # editable install + dev tools
+pytest                     # run the test suite (no network / no real Telegram)
+ruff check .               # lint
+```
+
+Project layout: the code lives in `src/weather_message_bot/` (`config`, `weather`, `formatting`,
+`telegram_sender`, `scheduler`, `__main__`); tests live in `tests/`.
+
+## Versioning
+
+The project follows [Semantic Versioning](https://semver.org/); the version is single-sourced in
+`pyproject.toml` and changes are tracked in [`CHANGELOG.md`](CHANGELOG.md). To release:
+
+```bash
+bump-my-version bump patch   # or: minor / major
+git push --follow-tags
+```
 
 ## Troubleshooting
 
 ### Error: "Environment variables not configured"
 - Make sure you have created the `.env` file
 - Check that all variables are set correctly
-- The `.env` file must be in the same folder as `weather_bot.py`
+- The `.env` file must be in the folder you launch the bot from (the project root)
 
 ### Error: "Invalid token"
 - Check that the bot token is correct

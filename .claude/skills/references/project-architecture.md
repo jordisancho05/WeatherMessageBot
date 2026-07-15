@@ -6,12 +6,6 @@ Telegram bot in Python. Once a day, at a configurable local time, it fetches the
 5-day forecast from OpenWeatherMap, builds a Spanish Markdown message (temperature, conditions, rain
 chance, a recommendation) and sends it to a Telegram chat.
 
-## Current state vs target layout
-- **Today** all logic lives in a single module, `weather_bot.py` (class `WeatherBot` + `main()`).
-- **Target** (created by the `src`-layout migration plan) splits it into the package below. This doc
-  describes that target so plans can map subtasks to concrete modules; until the migration runs, the
-  `weather_bot.py` symbols are the real ones.
-
 ## Package map (`src/weather_message_bot/`)
 - `__init__.py` — exposes `__version__` (read from installed metadata via `importlib.metadata`).
 - `__main__.py` — CLI entry point (`python -m weather_message_bot [--test]`): loads config, builds the

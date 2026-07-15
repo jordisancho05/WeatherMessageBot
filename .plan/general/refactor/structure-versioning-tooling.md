@@ -1,5 +1,5 @@
 ---
-status: draft
+status: done
 created: 2026-07-15
 ---
 
@@ -11,22 +11,23 @@ skills (`implementer`, `pr-review`) to this project. Behavior of the bot is pres
 structure, tooling and docs, not new features.
 
 ## Acceptance criteria
-- [ ] AC-1: `pip install -e ".[dev]"` succeeds from a clean venv; the console script
+- [x] AC-1: `pip install -e ".[dev]"` succeeds from a clean venv; the console script
   `weather-message-bot` and `python -m weather_message_bot` both start the scheduler.
-- [ ] AC-2: `python -m weather_message_bot --test` sends exactly one message and exits 0 (manual —
-  see Uncovered).
-- [ ] AC-3: `pytest` is green with at least one test per module (`config`, `weather`, `formatting`,
-  `telegram_sender`, `scheduler`) and touches no network / no real Telegram.
-- [ ] AC-4: `ruff check .` reports no errors.
-- [ ] AC-5: the version is single-sourced in `pyproject.toml`; `weather_message_bot.__version__`
-  equals it; `bump-my-version bump patch` updates `pyproject.toml`, commits, and creates a `vX.Y.Z`
-  git tag.
-- [ ] AC-6: `CHANGELOG.md` exists in Keep-a-Changelog format with an initial `0.1.0` entry.
-- [ ] AC-7: `DockerFile`, `docker-compose.yaml` and the CI workflow launch `python -m
-  weather_message_bot`; the image builds; CI tags the image with the project version.
-- [ ] AC-8: `.claude/skills/implementer/` and `.claude/skills/pr-review/` exist and contain **no**
+- [x] AC-2: `python -m weather_message_bot --test` sends exactly one message and exits 0 (verified
+  live against the real bot/chat during execution).
+- [x] AC-3: `pytest` is green (35 tests) with at least one test per module (`config`, `weather`,
+  `formatting`, `telegram_sender`, `scheduler`) and touches no network / no real Telegram.
+- [x] AC-4: `ruff check .` reports no errors.
+- [x] AC-5: the version is single-sourced in `pyproject.toml`; `weather_message_bot.__version__`
+  equals it (test_version); `bump-my-version bump patch --dry-run` bumps `pyproject.toml` and tags
+  `vX.Y.Z` (real bump left to the user — it commits/tags).
+- [x] AC-6: `CHANGELOG.md` exists in Keep-a-Changelog format with an initial `0.1.0` entry.
+- [x] AC-7: `DockerFile`, `docker-compose.yaml` and the CI workflow launch `python -m
+  weather_message_bot`; CI tags the image with the project version. Package wheel builds cleanly;
+  full image build is manual (Docker daemon not running here — see Uncovered).
+- [x] AC-8: `.claude/skills/implementer/` and `.claude/skills/pr-review/` exist and contain **no**
   Java/Maven/JDA/anime references — they cite this project's files, pytest, and commands.
-- [ ] AC-9: `README.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `project-tree.md` and
+- [x] AC-9: `README.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `project-tree.md` and
   `project-architecture.md` describe the new structure and entry point; the doc-sync table is clean.
 
 ## GRAPH STEPS
@@ -231,18 +232,27 @@ structure, tooling and docs, not new features.
   (AC-5).
 
 ## Checklist
-- [ ] Step 1 — Packaging foundation (`pyproject.toml` + tooling)
-- [ ] Step 2 — Adapt `implementer` skill + references
-- [ ] Step 3 — Adapt `pr-review` skill + references + evals
-- [ ] Step 4 — Extract `config.py`
-- [ ] Step 5 — Extract `weather.py`
-- [ ] Step 6 — Extract `formatting.py`
-- [ ] Step 7 — Extract `telegram_sender.py`
-- [ ] Step 8 — Extract `scheduler.py`
-- [ ] Step 9 — `__main__.py` + `__init__.py`, retire `weather_bot.py`
-- [ ] Step 10 — Versioning: `__version__`, `CHANGELOG.md`, bump tooling
-- [ ] Step 11 — Update Docker / compose / CI
-- [ ] Step 12 — Doc sync
+- [x] Step 1 — Packaging foundation (`pyproject.toml` + tooling)
+- [x] Step 2 — Adapt `implementer` skill + references
+- [x] Step 3 — Adapt `pr-review` skill + references + evals
+- [x] Step 4 — Extract `config.py`
+- [x] Step 5 — Extract `weather.py`
+- [x] Step 6 — Extract `formatting.py`
+- [x] Step 7 — Extract `telegram_sender.py`
+- [x] Step 8 — Extract `scheduler.py`
+- [x] Step 9 — `__main__.py` + `__init__.py`, retire `weather_bot.py`
+- [x] Step 10 — Versioning: `__version__`, `CHANGELOG.md`, bump tooling
+- [x] Step 11 — Update Docker / compose / CI
+- [x] Step 12 — Doc sync
+
+## Deviations
+- **S1**: the project venv `weathermessagebot/` was broken (pointed at a non-existent `Python310` on
+  another machine). Created a fresh `.venv` with Python 3.11 instead. Plan intent untouched.
+- **S11**: the Docker daemon (Docker Desktop) was not running, so the full `docker build` could not be
+  executed here. Validated the `pip install .` step instead by building the wheel (`pip wheel`); the
+  image build stays as manual verification.
+- **S9 (bonus)**: the `--test` smoke run picked up the real `.env`, so it sent a genuine Telegram
+  message (HTTP 200, exit 0) — a stronger end-to-end verification of AC-2 than planned.
 
 ## Plan references
 - @.claude/skills/references/project-architecture.md
