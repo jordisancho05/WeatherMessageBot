@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Message now shows today's **temperature range** (min–max from the forecast) alongside the current
+  temperature, e.g. `27–32°C (ahora 29°C, se siente como 31°C)`. Falls back to just the current
+  temperature when the forecast is unavailable.
+- **Heat warnings**: an extra line when today's max reaches 34°C (stay hydrated / avoid midday sun)
+  or 40°C (extreme-heat warning). Thresholds are `_HEAT_WARN` / `_HEAT_EXTREME` in `formatting.py`.
 - 10s request timeout (`aiohttp.ClientTimeout`) on the OpenWeatherMap calls so a hung connection
   cannot block the daily loop.
 

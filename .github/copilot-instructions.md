@@ -38,9 +38,10 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
   city/time/timezone).
 - `weather.py` — async `get_weather_data()` / `get_forecast_data()`; return `None` and **log** on
   HTTP 401/404/other, never raise.
-- `formatting.py` — pure `rain_probability()`, `weather_emoji()`, `recommendation()`,
-  `format_weather_message()` (Spanish, HTML parse mode; rain chance = max `pop` among today's next-24h
-  intervals). API-provided fields are `html.escape`d.
+- `formatting.py` — pure `rain_probability()` (max `pop` today), `temperature_range()` (today's
+  min–max), `heat_warning()` (≥34°C / ≥40°C), `weather_emoji()`, `recommendation()`,
+  `format_weather_message()` (Spanish, HTML parse mode; shows temp range + current). API-provided
+  fields are `html.escape`d.
 - `telegram_sender.py` — `send_weather_message()` orchestrates fetch → format →
   `bot.send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic
   message (no internal detail leaked).

@@ -119,12 +119,13 @@ The container is set to `restart: unless-stopped`, so it will keep running and r
 🌤️ Good morning! Here's today's weather
 
 📍 Madrid
-🌡️ Temperature: 22.5°C (feels like 24.1°C)
+🌡️ Temperature: 27–32°C (now 29°C, feels like 31°C)
 ☀️ Conditions: Clear Sky
-💧 Humidity: 65%
-🌧️ Chance of rain: 15%
+💧 Humidity: 40%
+🌧️ Chance of rain: 10%
 
 ☀️ Recommendation: No rain expected today, enjoy!
+🌡️ Warning: it will be quite hot. Drink water, seek shade and avoid the midday sun.
 
 ⏰ Sent automatically at 07:00 (Europe/Madrid)
 ```

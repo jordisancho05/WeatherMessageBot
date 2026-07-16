@@ -26,6 +26,20 @@ def _forecast_with_pops(pops: list[float], day: str | None = None):
     return {"list": items}
 
 
+def _forecast_with_temps(ranges: list[tuple[float, float]], day: str | None = None):
+    """Build today's 3h intervals carrying (temp_min, temp_max) in `main`."""
+    day = day or _NOW.strftime("%Y-%m-%d")
+    items = [
+        {
+            "dt_txt": f"{day} {i * 3:02d}:00:00",
+            "main": {"temp_min": tmin, "temp_max": tmax},
+            "pop": 0,
+        }
+        for i, (tmin, tmax) in enumerate(ranges)
+    ]
+    return {"list": items}
+
+
 def test_returns_error_string_when_no_weather():
     assert formatting.format_weather_message(None, None, _TZ, now=_NOW).startswith("❌")
 
@@ -95,3 +109,77 @@ def test_weather_emoji(description, emoji):
 )
 def test_recommendation_branches(probability, snippet):
     assert snippet in formatting.recommendation(probability)
+
+
+def test_temperature_range_returns_today_min_and_max():
+    forecast = _forecast_with_temps([(20, 28), (22, 32), (19, 30)])
+    assert formatting.temperature_range(forecast, _NOW) == (19, 32)
+
+
+@pytest.mark.parametrize(
+    "forecast",
+    [
+        None,
+        {"list": []},
+        _forecast_with_pops([0.5]),  # intervals without a `main` block
+    ],
+)
+def test_temperature_range_none_when_unavailable(forecast):
+    assert formatting.temperature_range(forecast, _NOW) is None
+
+
+def test_temperature_range_ignores_other_days():
+    forecast = _forecast_with_temps([(10, 40)], day="2020-01-01")
+    assert formatting.temperature_range(forecast, _NOW) is None
+
+
+@pytest.mark.parametrize(
+    "max_temp, expected",
+    [
+        (None, ""),
+        (28, ""),
+        (33.9, ""),
+        (34, "calor"),  # normal warning
+        (39, "calor"),
+        (40, "extremo"),  # extreme warning
+        (45, "extremo"),
+    ],
+)
+def test_heat_warning_thresholds(max_temp, expected):
+    result = formatting.heat_warning(max_temp)
+    if expected:
+        assert expected in result
+        assert result  # non-empty
+    else:
+        assert result == ""
+
+
+def test_extreme_warning_is_not_the_normal_one():
+    assert "extremo" in formatting.heat_warning(41)
+    assert "extremo" not in formatting.heat_warning(35)
+
+
+def test_message_shows_range_and_current_temperature():
+    forecast = _forecast_with_temps([(24, 27), (25, 32)])
+    msg = formatting.format_weather_message(_WEATHER, forecast, _TZ, now=_NOW)
+    assert "24–32°C" in msg  # min-max range for today
+    assert "ahora 22.5°C" in msg  # current temperature
+    assert "se siente como 24.1°C" in msg
+
+
+def test_message_falls_back_to_current_temp_without_forecast():
+    msg = formatting.format_weather_message(_WEATHER, None, _TZ, now=_NOW)
+    assert "22.5°C" in msg
+    assert "ahora" not in msg  # no range -> no "ahora" wording
+
+
+def test_message_includes_heat_warning_when_hot():
+    forecast = _forecast_with_temps([(28, 35)])  # max 35 -> warning
+    msg = formatting.format_weather_message(_WEATHER, forecast, _TZ, now=_NOW)
+    assert "Aviso" in msg
+
+
+def test_message_has_no_heat_warning_when_mild():
+    forecast = _forecast_with_temps([(18, 24)])  # max 24 -> no warning
+    msg = formatting.format_weather_message(_WEATHER, forecast, _TZ, now=_NOW)
+    assert "Aviso" not in msg

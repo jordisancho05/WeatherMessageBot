@@ -18,8 +18,9 @@ chance, a recommendation) and sends it to a Telegram chat.
   `get_forecast_data()` (5-day / 3h), both bounded by a 10s `ClientTimeout`. **Graceful degradation**:
   return `None` + log on HTTP 401/404/other, never raise.
 - `formatting.py` — pure functions: rain probability = max `pop` among today's next-24h (8×3h)
-  intervals, weather emoji from the description, and `format_weather_message()` building the Spanish
-  body (HTML parse mode; API-provided fields `html.escape`d).
+  intervals, `temperature_range()` (today's min–max from the forecast), `heat_warning()` (extra line
+  at ≥34°C / ≥40°C), weather emoji from the description, and `format_weather_message()` building the
+  Spanish body (HTML parse mode; API-provided fields `html.escape`d; shows the temp range + current).
 - `telegram_sender.py` — wraps `telegram.Bot`; `send_weather_message()` orchestrates fetch → format →
   `send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic message.
 - `scheduler.py` — `schedule_daily_message()` registers the daily `schedule` job at the local
