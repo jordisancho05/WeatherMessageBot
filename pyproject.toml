@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "weather-message-bot"
-version = "0.1.0"
+version = "1.0.0"
 description = "Telegram bot that sends a daily weather message from OpenWeatherMap."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,7 +45,7 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.bumpversion]
-current_version = "0.1.0"
+current_version = "1.0.0"
 allow_dirty = false
 commit = true
 tag = true
