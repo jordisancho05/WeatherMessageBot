@@ -1,0 +1,43 @@
+{
+  "description": "Labeled diff scenarios for the pr-review skill. Each case lists the findings a correct review must produce. A regression = an expected finding stops being produced, or the clean case starts producing findings.",
+  "cases": [
+    {
+      "name": "hardcoded-secret-in-compose",
+      "scope": "general",
+      "diff": "docker-compose.yaml: replaced `- TELEGRAM_TOKEN=${TELEGRAM_TOKEN}` with `- TELEGRAM_TOKEN=7970802467:AAHCG...`",
+      "expected_findings": [
+        { "bucket": "blocker", "rule": "Secrets", "reason": "real token inlined in a versioned file" }
+      ]
+    },
+    {
+      "name": "os-getenv-outside-config",
+      "scope": "weather",
+      "diff": "weather.py: added `api_key = os.getenv('WEATHER_API_KEY')` inside get_weather_data instead of receiving it from Settings",
+      "expected_findings": [
+        { "bucket": "warning", "rule": "Config", "reason": "config read outside config.py / Settings" }
+      ]
+    },
+    {
+      "name": "request-without-timeout",
+      "scope": "weather",
+      "diff": "weather.py: new aiohttp session.get(url, params=params) with no ClientTimeout",
+      "expected_findings": [
+        { "bucket": "warning", "rule": "Async / HTTP", "reason": "network call without a timeout can hang the loop" }
+      ]
+    },
+    {
+      "name": "behavior-change-no-test",
+      "scope": "weather",
+      "diff": "formatting.py: rain_probability formula changed; no test added or updated",
+      "expected_findings": [
+        { "bucket": "blocker", "rule": "Tests", "reason": "changed behavior with no covering test" }
+      ]
+    },
+    {
+      "name": "clean-add-config-var",
+      "scope": "general",
+      "diff": "config.py adds UNITS with a default; documented in .env.example and README; test_config covers default + override",
+      "expected_findings": []
+    }
+  ]
+}

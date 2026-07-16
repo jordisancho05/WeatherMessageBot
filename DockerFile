@@ -1,0 +1,15 @@
+# Python base image
+FROM python:3.11-slim
+
+# Working directory
+WORKDIR /app
+
+# Copy the package metadata and sources
+COPY pyproject.toml README.md ./
+COPY src ./src
+
+# Install the package (and its runtime dependencies) from pyproject.toml
+RUN pip install --no-cache-dir .
+
+# Run the bot as a module
+CMD ["python", "-m", "weather_message_bot"]
