@@ -47,8 +47,9 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
   `format_weather_message()` (Spanish, HTML parse mode; shows temp range + current). API-provided
   fields are `html.escape`d.
 - `telegram_sender.py` — `send_weather_message()` orchestrates fetch → format →
-  `bot.send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic
-  message (no internal detail leaked).
+  `bot.send_message(parse_mode='HTML')` inside `async with bot:` (initialize/shutdown → pool closed);
+  on failure logs the detail and sends the chat a generic message (no internal detail leaked); every
+  failure, including entering the Bot context, is swallowed.
 - `scheduler.py` — `schedule_daily_message()` registers the daily job at the local
   `TIME_SEND_MESSAGE` **in the configured timezone** (via `schedule`'s native tz support — correct on
   a local or a UTC/Docker clock), loops `run_pending()`; bridges sync `schedule` to the async send on
