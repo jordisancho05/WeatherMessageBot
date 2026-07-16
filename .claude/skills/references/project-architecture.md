@@ -22,7 +22,8 @@ chance, a recommendation) and sends it to a Telegram chat.
   at ≥34°C / ≥40°C), weather emoji from the description, and `format_weather_message()` building the
   Spanish body (HTML parse mode; API-provided fields `html.escape`d; shows the temp range + current).
 - `telegram_sender.py` — wraps `telegram.Bot`; `send_weather_message()` orchestrates fetch → format →
-  `send_message(parse_mode='HTML')`; on failure logs the detail and sends the chat a generic message.
+  `send_message(parse_mode='HTML')` inside `async with bot:` (initialize/shutdown → deterministic
+  pool close); on failure logs the detail and sends the chat a generic message; all failures swallowed.
 - `scheduler.py` — `schedule_daily_message()` registers the daily `schedule` job at the local
   `TIME_SEND_MESSAGE` in the configured timezone (via `schedule`'s native tz support, correct on a
   local or a UTC/Docker clock); loops `run_pending()`; bridges sync `schedule` to the async send on a

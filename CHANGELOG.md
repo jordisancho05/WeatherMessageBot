@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cannot block the daily loop.
 
 ### Changed
+- The Telegram `Bot` is now used through its async lifecycle (`async with bot:` → `initialize()` /
+  `shutdown()`), closing the httpx connection pool deterministically per send. Graceful degradation is
+  preserved: a failure entering the Bot context is logged and never raises.
 - Weather message now uses Telegram **HTML** parse mode with API-provided fields `html.escape`d, so a
   `_ * [ <` in a city name or description can no longer break (or inject into) the message.
 - Rain probability is now the max `pop` (probability of precipitation) among today's forecast

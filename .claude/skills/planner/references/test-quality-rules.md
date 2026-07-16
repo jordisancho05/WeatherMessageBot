@@ -17,9 +17,11 @@ defines **how the tests themselves are written**.
 - **Async HTTP client** (`weather.py`) → `pytest-asyncio` + `aioresponses` to stub the aiohttp calls;
   **never hit the real API**. Assert the parsed result and the graceful-degradation path (HTTP
   401/404/error → returns `None`, no exception). E.g. `tests/test_weather.py`.
-- **Telegram sender** (`telegram_sender.py`) → mock the `Bot` with `unittest.mock.AsyncMock`; assert
-  `send_message` is called with the expected `chat_id`, text and `parse_mode='HTML'`, and that a
-  send failure still tries the error-notification path. E.g. `tests/test_telegram_sender.py`.
+- **Telegram sender** (`telegram_sender.py`) → mock the `Bot` with `unittest.mock.AsyncMock` (it
+  supports the `async with` protocol); assert `send_message` is called with the expected `chat_id`,
+  text and `parse_mode='HTML'`, that the Bot is entered/exited as an async context manager
+  (`__aenter__`/`__aexit__` awaited), and that a send failure — or a failed context enter — still
+  degrades gracefully. E.g. `tests/test_telegram_sender.py`.
 - **Config** (`config.py`) → `monkeypatch.setenv` / `delenv`; assert defaults, and that a missing
   required var (`TELEGRAM_TOKEN`, `WEATHER_API_KEY`, `CHAT_ID`) fails loudly. E.g. `tests/test_config.py`.
 

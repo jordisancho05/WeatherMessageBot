@@ -33,8 +33,10 @@
   the local zone. No second, inline source of "now".
 
 ## Telegram
-- `send_message` uses the intended `parse_mode`; text that interpolates API fields into Markdown is
-  escaped (unescaped `_ * [ ` ` breaks the send).
+- `send_message` uses the intended `parse_mode`; API fields interpolated into the message are HTML
+  `html.escape`d (the message uses HTML parse mode).
+- The `Bot` is used through its async lifecycle (`async with bot:` → initialize/shutdown); failures
+  entering the context degrade gracefully, never raising out of `send_weather_message`.
 - The `Bot` is not constructed or called in a test without a mock.
 
 ## Packaging / versioning

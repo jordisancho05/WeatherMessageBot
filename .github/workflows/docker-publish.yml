@@ -8,8 +8,10 @@ on:
   workflow_dispatch:
 
 env:
-  # GITHUB_TOKEN can only publish under the repo owner's namespace (lowercase for GHCR)
-  IMAGE: ghcr.io/diaman05/weathermessagebot
+  # GITHUB_TOKEN can only publish under the repo owner's namespace (lowercase for GHCR).
+  # github.repository_owner resolves to the repo owner (jordisancho05), which is lowercase.
+  IMAGE: ghcr.io/${{ github.repository_owner }}/weathermessagebot
+
 
 jobs:
   build-publish:

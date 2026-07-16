@@ -58,3 +58,25 @@ async def test_secondary_failure_is_swallowed(monkeypatch):
     bot.send_message = AsyncMock(side_effect=RuntimeError("always down"))
 
     await telegram_sender.send_weather_message(_SETTINGS, _TZ, bot=bot)  # must not raise
+
+
+async def test_uses_bot_as_async_context_manager(monkeypatch):
+    """The Bot is entered/exited via its async lifecycle (initialize/shutdown)."""
+    _stub_weather(monkeypatch)
+    bot = AsyncMock()
+
+    await telegram_sender.send_weather_message(_SETTINGS, _TZ, bot=bot)
+
+    bot.__aenter__.assert_awaited_once()
+    bot.__aexit__.assert_awaited_once()
+
+
+async def test_initialize_failure_is_graceful(monkeypatch):
+    """A failure entering the Bot context (e.g. initialize) is logged and never raises."""
+    _stub_weather(monkeypatch)
+    bot = AsyncMock()
+    bot.__aenter__.side_effect = RuntimeError("init failed")
+
+    await telegram_sender.send_weather_message(_SETTINGS, _TZ, bot=bot)  # must not raise
+
+    bot.send_message.assert_not_awaited()
