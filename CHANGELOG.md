@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-30
+
 ### Added
 - **`/time` command**: ask the bot for the current weather on demand. Replies with a short
   "right now" message (temperature, feels-like, conditions, humidity) built by the new
@@ -87,6 +89,7 @@ First stable release.
 - `weather_bot.py` (replaced by the package).
 - `requirements.txt` (dependencies now live in `pyproject.toml`).
 
-[Unreleased]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jordisancho05/WeatherMessageBot/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/jordisancho05/WeatherMessageBot/releases/tag/v0.1.0
