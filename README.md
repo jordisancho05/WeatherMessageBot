@@ -5,6 +5,8 @@ This Telegram bot automatically sends you a message every day (7:00 AM by defaul
 ## Features
 
 - ✅ Automatic daily messages at a configurable time
+- 💬 `/time` command to ask for the current weather on demand
+- 🔒 Private by default: commands only answer your own `CHAT_ID`
 - 🌡️ Complete current weather information
 - 🌧️ Daily chance of rain
 - ☂️ Recommendations based on the weather conditions
@@ -66,6 +68,7 @@ This Telegram bot automatically sends you a message every day (7:00 AM by defaul
    CITY=Madrid,ES
    TIME_SEND_MESSAGE=07:00
    TIMEZONE=Europe/Madrid
+   TIME_COMMAND_COOLDOWN=30
    ```
 
    **Where:**
@@ -75,6 +78,8 @@ This Telegram bot automatically sends you a message every day (7:00 AM by defaul
    - `CITY`: City for the forecast (format: "City,CountryCode")
    - `TIME_SEND_MESSAGE`: Time at which you want to receive the message (format: HH:MM)
    - `TIMEZONE`: Time zone of your city
+   - `TIME_COMMAND_COOLDOWN`: Minimum seconds between two `/time` replies, to protect your
+     OpenWeatherMap quota (default `30`; set `0` to disable)
 
 ## Usage
 
@@ -85,7 +90,26 @@ python main.py
 Equivalent alternatives: `python -m weather_message_bot` or the installed console script
 `weather-message-bot`.
 
-The bot will start and wait until the configured time to send the first message, then keep sending daily messages.
+The bot will start, keep sending daily messages at the configured time, and listen for commands.
+
+### Commands
+
+Send these to your bot on Telegram while it is running:
+
+| Command | What it does |
+| --- | --- |
+| `/time` | Replies with the weather right now |
+| `/start` | Lists the available commands |
+
+**Who can use them?** Telegram bots are discoverable by anyone, so commands are restricted to the
+`CHAT_ID` in your `.env`: any other chat gets a short "this bot is private" reply and no
+OpenWeatherMap call is made. To let other people in, extend `is_authorized()` in
+`src/weather_message_bot/commands.py`.
+
+**Rate limiting.** `/time` is limited to one reply per `TIME_COMMAND_COOLDOWN` seconds per chat
+(default 30). A repeat inside that window gets `⏳ Espera Ns...` and makes **no** API call, so
+hammering the command can't burn your OpenWeatherMap quota. Only a successful reply starts the
+cooldown — if a lookup fails you can retry immediately. `/start` isn't limited (it calls no API).
 
 ### Test Mode
 To check that everything works correctly:
@@ -150,7 +174,7 @@ ruff check .               # lint
 ```
 
 Project layout: the code lives in `src/weather_message_bot/` (`config`, `weather`, `formatting`,
-`telegram_sender`, `scheduler`, `__main__`); tests live in `tests/`.
+`telegram_sender`, `commands`, `scheduler`, `__main__`); tests live in `tests/`.
 
 ## Versioning
 
@@ -183,9 +207,9 @@ git push --follow-tags
 
 ## Dependencies
 
-- `python-telegram-bot`: To interact with the Telegram API
+- `python-telegram-bot[job-queue]`: To interact with the Telegram API, listen for commands and
+  schedule the daily job (the extra pulls in APScheduler)
 - `aiohttp`: To make asynchronous HTTP requests
-- `schedule`: To schedule daily tasks
 - `python-dotenv`: To load environment variables from a `.env` file
 - `pytz`: To handle the time in your time zone
 

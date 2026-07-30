@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`/time` command**: ask the bot for the current weather on demand. Replies with a short
+  "right now" message (temperature, feels-like, conditions, humidity) built by the new
+  `format_current_weather_message()`; it needs only the current-weather call, no forecast.
+- **`/start` command** listing the available commands.
+- **Authorization gate** (`commands.is_authorized`): Telegram bots are discoverable by anyone, so
+  every command is restricted to the configured `CHAT_ID`. An unauthorized chat gets a short refusal
+  and **no** OpenWeatherMap call is made, so strangers cannot burn the API quota.
+- **Rate limiting on `/time`**: one reply per chat every `TIME_COMMAND_COOLDOWN` seconds (new env
+  var, default `30`, `0` disables it). A repeat inside the window is answered with the remaining wait
+  and makes no API call. The cooldown starts only on a *served* reply, so a failed lookup can be
+  retried immediately; timestamps use a monotonic clock, so a system-clock change cannot lock the
+  command out. State lives in PTB's per-chat `chat_data`. `/start` is not limited (it calls no API).
+
+### Changed
+- The bot now runs as a `python-telegram-bot` `Application` with polling, so it both listens for
+  commands and sends the daily message from a single asyncio loop. `scheduler.run()` replaces
+  `scheduler.schedule_daily_message()`.
+- The daily job moved from `schedule` to PTB's `JobQueue` (`run_daily` with a timezone-aware
+  `datetime.time`), keeping the correct wall-clock behavior on both a local and a UTC/Docker clock.
+- `send_weather_message()` accepts `manage_bot=False` so the daily job reuses the `Application`'s
+  already-initialized Bot instead of shutting down its connection pool (which would stop polling).
+
+### Removed
+- The `schedule` dependency (replaced by PTB's `JobQueue`, which arrives via the new
+  `python-telegram-bot[job-queue]` extra).
+
 ## [1.0.0] - 2026-07-16
 
 First stable release.

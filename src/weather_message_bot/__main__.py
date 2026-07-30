@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
 
     logger.info("Starting weather bot... (press Ctrl+C to stop)")
     try:
-        scheduler.schedule_daily_message(settings, tz)
+        scheduler.run(settings, tz)
     except KeyboardInterrupt:
         logger.info("Bot stopped by user")
     return 0

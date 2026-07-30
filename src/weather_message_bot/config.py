@@ -15,6 +15,8 @@ _DEFAULTS = {
     "CITY": "Madrid,ES",
     "TIME_SEND_MESSAGE": "07:00",
     "TIMEZONE": "Europe/Madrid",
+    # Minimum seconds between two /time replies in the same chat (0 disables the limit).
+    "TIME_COMMAND_COOLDOWN": "30",
 }
 
 
@@ -32,6 +34,23 @@ class Settings:
     city: str = _DEFAULTS["CITY"]
     time_send_message: str = _DEFAULTS["TIME_SEND_MESSAGE"]
     timezone: str = _DEFAULTS["TIMEZONE"]
+    time_command_cooldown: int = int(_DEFAULTS["TIME_COMMAND_COOLDOWN"])
+
+
+def _load_cooldown() -> int:
+    """Read `TIME_COMMAND_COOLDOWN` as a non-negative int, failing loudly on a bad value."""
+    raw = os.environ.get("TIME_COMMAND_COOLDOWN", _DEFAULTS["TIME_COMMAND_COOLDOWN"])
+    try:
+        seconds = int(raw)
+    except ValueError:
+        raise MissingConfigError(
+            f"TIME_COMMAND_COOLDOWN must be a whole number of seconds, got {raw!r}."
+        ) from None
+    if seconds < 0:
+        raise MissingConfigError(
+            f"TIME_COMMAND_COOLDOWN must be zero or positive, got {seconds}."
+        )
+    return seconds
 
 
 def load_settings() -> Settings:
@@ -51,4 +70,5 @@ def load_settings() -> Settings:
         city=os.environ.get("CITY", _DEFAULTS["CITY"]),
         time_send_message=os.environ.get("TIME_SEND_MESSAGE", _DEFAULTS["TIME_SEND_MESSAGE"]),
         timezone=os.environ.get("TIMEZONE", _DEFAULTS["TIMEZONE"]),
+        time_command_cooldown=_load_cooldown(),
     )

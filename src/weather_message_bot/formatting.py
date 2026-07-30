@@ -136,3 +136,39 @@ def format_weather_message(
         f"\n\n⏰ Enviado automáticamente a las {now.strftime('%H:%M')} ({tz.zone})"
     )
     return message
+
+
+def format_current_weather_message(
+    weather_data: dict | None,
+    tz,
+    now: datetime | None = None,
+) -> str:
+    """Build the short "right now" message used by the ``/time`` command.
+
+    Unlike `format_weather_message` this needs no forecast call: it reports only the current
+    conditions, so it stays cheap in OpenWeatherMap quota.
+    """
+    if not weather_data:
+        return _NO_WEATHER
+
+    now = now or datetime.now(tz)
+
+    temp = weather_data["main"]["temp"]
+    feels_like = weather_data["main"]["feels_like"]
+    humidity = weather_data["main"]["humidity"]
+    description = weather_data["weather"][0]["description"].title()
+    city_name = weather_data["name"]
+
+    emoji = weather_emoji(description)
+
+    # HTML parse mode: escape API-provided fields so `< > &` can't break or inject markup.
+    safe_city = html.escape(city_name)
+    safe_description = html.escape(description)
+
+    return (
+        f"{emoji} <b>Tiempo ahora en {safe_city}</b>\n\n"
+        f"🌡️ <b>Temperatura:</b> {temp:.1f}°C (se siente como {feels_like:.1f}°C)\n"
+        f"{emoji} <b>Condiciones:</b> {safe_description}\n"
+        f"💧 <b>Humedad:</b> {humidity}%\n\n"
+        f"🕒 Consultado a las {now.strftime('%H:%M')} ({tz.zone})"
+    )

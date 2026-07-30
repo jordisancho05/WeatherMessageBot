@@ -9,6 +9,7 @@ _ENV_KEYS = (
     "CITY",
     "TIME_SEND_MESSAGE",
     "TIMEZONE",
+    "TIME_COMMAND_COOLDOWN",
 )
 
 

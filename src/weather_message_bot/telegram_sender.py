@@ -1,14 +1,17 @@
 """Telegram sending layer.
 
-Orchestrates fetch → format → send. The Bot is used through its async lifecycle
-(``async with bot:`` → ``initialize()`` on enter, ``shutdown()`` on exit) so the httpx connection
-pool is closed deterministically. On failure it still tries to notify the chat of the error
-(user-facing text stays in Spanish); every failure — including entering the Bot context — is logged
-and swallowed so the daily loop survives.
+Orchestrates fetch → format → send. When this module owns the Bot (the ``--test`` one-shot) it is
+used through its async lifecycle (``async with bot:`` → ``initialize()`` on enter, ``shutdown()`` on
+exit) so the httpx connection pool is closed deterministically. When the Bot belongs to a running
+`Application` (the daily job) pass ``manage_bot=False``: it is already initialized and shutting it
+down would kill the polling. On failure it still tries to notify the chat of the error (user-facing
+text stays in Spanish); every failure — including entering the Bot context — is logged and swallowed
+so the daily loop survives.
 """
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from telegram import Bot
@@ -19,12 +22,15 @@ from .config import Settings
 logger = logging.getLogger(__name__)
 
 
-async def send_weather_message(settings: Settings, tz, bot: Bot | None = None) -> None:
+async def send_weather_message(
+    settings: Settings, tz, bot: Bot | None = None, *, manage_bot: bool = True
+) -> None:
     """Fetch the weather and send the formatted message to the configured chat."""
     bot = bot or Bot(token=settings.telegram_token)
+    # Only drive the Bot lifecycle when we own it; a shared Application Bot must stay running.
+    lifecycle = bot if manage_bot else contextlib.AsyncExitStack()
     try:
-        # `async with bot:` runs initialize() on enter and shutdown() (closes the pool) on exit.
-        async with bot:
+        async with lifecycle:
             try:
                 weather_data = await weather.get_weather_data(
                     settings.city, settings.weather_api_key

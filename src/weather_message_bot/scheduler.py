@@ -1,45 +1,58 @@
-"""Daily scheduling.
+"""Bot runtime: daily job + command polling.
 
-The daily job is registered at the configured local ``TIME_SEND_MESSAGE`` **in the configured
-timezone**: `schedule` (>=1.2) resolves it against the given zone, so it fires at the right
-wall-clock time whether the host runs in that timezone (local) or in UTC (Docker).
+Both live in a single `Application` so one asyncio loop drives everything. The daily message is
+registered on PTB's `JobQueue` via ``run_daily`` with a timezone-aware `time`, so it fires at the
+right wall-clock time whether the host runs in that timezone (local) or in UTC (Docker).
 """
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import time
+from datetime import time as dt_time
 
-import schedule
+from telegram.ext import Application, CommandHandler
 
-from . import telegram_sender
+from . import commands, telegram_sender
 from .config import Settings
 
 logger = logging.getLogger(__name__)
 
-# How often the loop checks for due jobs (seconds).
-_POLL_SECONDS = 20
+
+def parse_daily_time(time_send_message: str, tz) -> dt_time:
+    """Parse ``HH:MM`` into a timezone-aware `time` for `JobQueue.run_daily`."""
+    hour, minute = (int(part) for part in time_send_message.split(":"))
+    return dt_time(hour=hour, minute=minute, tzinfo=tz)
 
 
-def _run_once(settings: Settings, tz) -> None:
-    """Bridge the sync scheduler to the async send on a fresh event loop."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(telegram_sender.send_weather_message(settings, tz))
-    finally:
-        loop.close()
+async def _daily_job(context) -> None:
+    """JobQueue callback: send the daily weather message reusing the shared Bot."""
+    settings: Settings = context.bot_data["settings"]
+    tz = context.bot_data["tz"]
+    await telegram_sender.send_weather_message(settings, tz, bot=context.bot, manage_bot=False)
 
 
-def schedule_daily_message(settings: Settings, tz, *, block: bool = True) -> None:
-    """Register the daily job at the configured time/zone and (by default) run the loop forever."""
-    schedule.every().day.at(settings.time_send_message, settings.timezone).do(
-        _run_once, settings, tz
+def build_application(settings: Settings, tz) -> Application:
+    """Build the `Application` with the command handlers and the daily job registered."""
+    application = Application.builder().token(settings.telegram_token).build()
+
+    # Handlers read config from bot_data instead of closing over it, so they stay testable.
+    application.bot_data["settings"] = settings
+    application.bot_data["tz"] = tz
+
+    application.add_handler(CommandHandler("start", commands.start_command))
+    application.add_handler(CommandHandler("time", commands.time_command))
+
+    application.job_queue.run_daily(
+        _daily_job, time=parse_daily_time(settings.time_send_message, tz), name="daily_weather"
     )
     logger.info(
-        "Scheduled daily message at %s (%s)", settings.time_send_message, settings.timezone
+        "Scheduled daily message at %s (%s); listening for /time",
+        settings.time_send_message,
+        settings.timezone,
     )
-    while block:
-        schedule.run_pending()
-        time.sleep(_POLL_SECONDS)
+    return application
+
+
+def run(settings: Settings, tz) -> None:
+    """Run the bot: daily job plus command polling, until interrupted."""
+    build_application(settings, tz).run_polling()
