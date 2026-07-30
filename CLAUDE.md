@@ -17,6 +17,9 @@ demand. Packaged app under `src/weather_message_bot/`.
 - **Every new command handler must gate on `commands.is_authorized()`** before doing any work.
   Telegram bots are discoverable by anyone; an unauthorized chat must get the refusal and trigger
   **no** OpenWeatherMap call (the API key has a limited quota).
+- **Never let the bot token reach the logs.** `httpx` logs request URLs and PTB puts the token in the
+  URL path, so `httpx`/`httpcore`/`apscheduler` are pinned to WARNING in `__main__._quiet_noisy_loggers()`.
+  Don't set the root level to DEBUG, and don't log a URL or a `Bot` repr.
 - **Don't commit or push** unless explicitly asked.
 
 ## Stack
@@ -68,7 +71,9 @@ Docker: `docker build -f DockerFile -t weather-telegram-bot:latest .` then `dock
   local or a UTC/Docker clock; `run()` calls `run_polling()`, so the daily job and command polling
   share one asyncio loop.
 - `__main__.py` — `main()` parses `--test`, forces `WindowsSelectorEventLoopPolicy` on win32, loads
-  `.env`, builds `Settings`, runs the bot (`scheduler.run`) or the one-shot send. `__init__.py`
+  `.env`, builds `Settings`, runs the bot (`scheduler.run`) or the one-shot send;
+  `_quiet_noisy_loggers()` pins `httpx`/`httpcore`/`apscheduler` to WARNING (keeps the token out of
+  the logs and drops the per-poll spam). `__init__.py`
   exposes `__version__` (from installed metadata).
 
 ## Conventions

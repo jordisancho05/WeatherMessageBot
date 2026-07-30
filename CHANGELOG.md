@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-07-30
+
+### Fixed
+- **The bot token was written to the logs on every polling cycle.** `httpx` logs each request URL at
+  INFO and python-telegram-bot puts the token in the URL path, so `getUpdates` (every ~10s) leaked
+  the token into the container logs indefinitely. `httpx`, `httpcore` and `apscheduler` are now
+  raised to WARNING (`_quiet_noisy_loggers()` in `__main__.py`), which also removes the per-poll log
+  spam. Application logs are unaffected.
+
 ## [1.1.0] - 2026-07-30
 
 ### Added
@@ -89,7 +98,8 @@ First stable release.
 - `weather_bot.py` (replaced by the package).
 - `requirements.txt` (dependencies now live in `pyproject.toml`).
 
-[Unreleased]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/jordisancho05/WeatherMessageBot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/jordisancho05/WeatherMessageBot/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/jordisancho05/WeatherMessageBot/releases/tag/v0.1.0
