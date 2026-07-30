@@ -42,6 +42,12 @@
   never raising out of `send_weather_message`.
 - The `Bot` is not constructed or called in a test without a mock.
 
+## Secrets in logs
+- No log line can contain the bot token or an api key. `httpx` logs request URLs and PTB embeds the
+  token in the path, so `httpx`/`httpcore`/`apscheduler` must stay at WARNING
+  (`__main__._quiet_noisy_loggers()`). Raising the root level to DEBUG, removing a logger from
+  `_NOISY_LOGGERS`, or logging a URL / `Bot` repr re-leaks it and is a blocker.
+
 ## Commands / authorization
 - **Every** command handler gates on `commands.is_authorized()` before doing any work; an
   unauthorized chat gets the refusal and triggers **no** OpenWeatherMap call. A new handler missing

@@ -193,9 +193,17 @@ git push --follow-tags
 - Check that all variables are set correctly
 - The `.env` file must be in the folder you launch the bot from (the project root)
 
+### The logs show a `getUpdates` request every ~10 seconds
+That's normal — it's how the bot listens for commands like `/time` (long polling). Those lines come
+from `httpx` and are silenced (level WARNING) because the request URL contains the bot token; only
+application logs are shown. If you ever raise logging to DEBUG, be aware the token will appear in
+the logs, and never paste them publicly.
+
 ### Error: "Invalid token"
 - Check that the bot token is correct
 - Make sure the bot is active on Telegram
+- If your token was ever exposed (e.g. pasted in a chat or a log dump), revoke it with
+  [@BotFather](https://t.me/botfather) → `/revoke`, then put the new one in `.env`
 
 ### Error: "Chat not found"
 - Check that the Chat ID is correct

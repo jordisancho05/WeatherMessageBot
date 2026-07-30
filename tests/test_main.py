@@ -1,5 +1,6 @@
 """Tests for the CLI entry point (collaborators mocked, no network)."""
 
+import logging
 from unittest.mock import MagicMock
 
 import weather_message_bot.__main__ as entry
@@ -35,6 +36,19 @@ def test_default_runs_scheduler_not_oneshot(monkeypatch):
     assert entry.main([]) == 0
     schedule.assert_called_once()
     run_test.assert_not_called()
+
+
+def test_noisy_loggers_are_quieted_so_the_token_is_never_logged():
+    """`httpx` logs the request URL, which carries the bot token — it must not stay at INFO."""
+    for name in entry._NOISY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.NOTSET)
+
+    entry._quiet_noisy_loggers()
+
+    for name in entry._NOISY_LOGGERS:
+        logger = logging.getLogger(name)
+        assert logger.level == logging.WARNING
+        assert not logger.isEnabledFor(logging.INFO), f"{name} would still log every poll"
 
 
 def test_missing_config_returns_nonzero(monkeypatch):
