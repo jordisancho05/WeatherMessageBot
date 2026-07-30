@@ -21,12 +21,33 @@
    `parametrize` case if it branches.
 
 ## Change the schedule / time handling
-1. `scheduler.py` → the daily job registration lives here.
-2. Register with `schedule.every().day.at(TIME_SEND_MESSAGE, TIMEZONE)` — pass the zone so `schedule`
-   resolves it correctly on a local or a UTC/Docker clock. Don't reintroduce manual UTC math. The
-   message still displays the local time + zone.
-3. Test: `tests/test_scheduler.py` → schedule the job with `block=False` and assert `schedule.jobs[0]`
-   has the expected `at_time` and `at_time_zone` (machine-independent; don't run the loop).
+1. `scheduler.py` → the daily job registration lives here (`build_application`).
+2. Register on PTB's `JobQueue` with `run_daily(callback, time=parse_daily_time(HH:MM, tz))` — the
+   `time` must carry `tzinfo` so it resolves correctly on a local or a UTC/Docker clock. Don't
+   reintroduce manual UTC math. The message still displays the local time + zone.
+3. The job callback receives the `Application`'s Bot: pass it through as
+   `send_weather_message(..., bot=context.bot, manage_bot=False)`. Never let the job shut that Bot
+   down — it would stop command polling.
+4. Test: `tests/test_scheduler.py` → assert `parse_daily_time()` returns the expected tz-aware `time`,
+   and that `build_application()` registers exactly one `run_daily` job (mock the builder;
+   machine-independent, no polling).
+
+## Add a command (e.g. `/foo`)
+1. `commands.py` → add an `async def foo_command(update, context)` handler. **First line of work must
+   be the `is_authorized()` gate**: on failure reply `_DENIED` and `return` before any API call —
+   Telegram bots are public, and the OpenWeatherMap key has a limited quota.
+2. Read config from `context.bot_data["settings"]` / `["tz"]`, not module globals.
+3. If the command hits OpenWeatherMap, rate limit it **after** the auth gate: reuse
+   `_cooldown_remaining(context.chat_data, cooldown, time.monotonic())` and record the timestamp only
+   once the reply was actually served (a failure must not lock the user out). Per-chat state belongs
+   in `chat_data`, never a module global.
+4. Wrap the work in `try/except`: log the detail, reply a generic Spanish error (never leak internals).
+5. `scheduler.py` → register it: `application.add_handler(CommandHandler("foo", commands.foo_command))`.
+6. `commands.py` → list it in `_START` so `/start` stays accurate.
+7. Test: `tests/test_commands.py` → owner chat gets the content; a stranger chat gets the refusal
+   **and** the fetch is `assert_not_awaited()`; a raising fetch is handled without leaking the detail.
+   If rate limited: a quick repeat is refused with no API call, and it works again after the cooldown.
+8. Docs: the README command table and the `/newbot` command list in BotFather (optional).
 
 ## Add a command-line flag
 1. `__main__.py` → parse `sys.argv` (or `argparse`); keep `--test` behavior intact.

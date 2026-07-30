@@ -11,9 +11,9 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "jordisancho05" }]
 dependencies = [
-    "python-telegram-bot==20.7",
+    # [job-queue] pulls in APScheduler, which backs the daily JobQueue job.
+    "python-telegram-bot[job-queue]==20.7",
     "aiohttp==3.9.1",
-    "schedule==1.2.0",
     "python-dotenv==1.0.0",
     "pytz==2025.2",
 ]

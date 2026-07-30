@@ -14,7 +14,7 @@
 | `.claude/skills/references/project-architecture.md` | Module map, layering, responsibilities |
 | `.claude/skills/references/project-tree.md` | Directory tree, per-file one-liners |
 | `.claude/skills/references/common-commands.md` | Env / run / test / lint / bump / Docker commands |
-| `.claude/skills/references/common-workflows.md` | Recipes (add config var / weather field / schedule / CLI flag / version bump) |
+| `.claude/skills/references/common-workflows.md` | Recipes (add config var / weather field / schedule / bot command / CLI flag / version bump) |
 | `.claude/skills/planner/references/*`, `.claude/skills/implementer/references/*`, `.claude/skills/pr-review/references/*` | Planning / execution / review mechanics |
 | `CHANGELOG.md` | Released changes (Keep a Changelog) |
 

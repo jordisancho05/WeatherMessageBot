@@ -71,6 +71,18 @@ async def test_uses_bot_as_async_context_manager(monkeypatch):
     bot.__aexit__.assert_awaited_once()
 
 
+async def test_manage_bot_false_leaves_the_shared_bot_running(monkeypatch):
+    """The daily job passes an Application-owned Bot; shutting it down would stop polling."""
+    _stub_weather(monkeypatch)
+    bot = AsyncMock()
+
+    await telegram_sender.send_weather_message(_SETTINGS, _TZ, bot=bot, manage_bot=False)
+
+    bot.send_message.assert_awaited_once()
+    bot.__aenter__.assert_not_awaited()
+    bot.__aexit__.assert_not_awaited()
+
+
 async def test_initialize_failure_is_graceful(monkeypatch):
     """A failure entering the Bot context (e.g. initialize) is logged and never raises."""
     _stub_weather(monkeypatch)

@@ -183,3 +183,32 @@ def test_message_has_no_heat_warning_when_mild():
     forecast = _forecast_with_temps([(18, 24)])  # max 24 -> no warning
     msg = formatting.format_weather_message(_WEATHER, forecast, _TZ, now=_NOW)
     assert "Aviso" not in msg
+
+
+def test_current_message_reports_only_the_present_conditions():
+    msg = formatting.format_current_weather_message(_WEATHER, _TZ, now=_NOW)
+    assert "Madrid" in msg
+    assert "22.5°C" in msg
+    assert "se siente como 24.1°C" in msg
+    assert "65%" in msg
+    assert "Cielo Despejado" in msg
+    assert "07:00" in msg
+    # The short message carries no forecast-derived content.
+    assert "Recomendación" not in msg
+    assert "Probabilidad de lluvia" not in msg
+
+
+def test_current_message_without_data_returns_fallback():
+    assert "❌" in formatting.format_current_weather_message(None, _TZ, now=_NOW)
+
+
+def test_current_message_escapes_api_fields():
+    """API-provided fields are escaped so they cannot break the HTML parse mode."""
+    hostile = {
+        "main": {"temp": 20.0, "feels_like": 20.0, "humidity": 50},
+        "weather": [{"description": "<b>bold</b>"}],
+        "name": "Ma<drid & Co",
+    }
+    msg = formatting.format_current_weather_message(hostile, _TZ, now=_NOW)
+    assert "Ma&lt;drid &amp; Co" in msg
+    assert "&lt;B&gt;Bold&lt;/B&gt;" in msg

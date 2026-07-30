@@ -18,7 +18,7 @@ def test_test_flag_runs_oneshot_not_scheduler(monkeypatch):
     run_test = MagicMock()
     schedule = MagicMock()
     monkeypatch.setattr(entry, "_run_test", run_test)
-    monkeypatch.setattr(entry.scheduler, "schedule_daily_message", schedule)
+    monkeypatch.setattr(entry.scheduler, "run", schedule)
 
     assert entry.main(["--test"]) == 0
     run_test.assert_called_once()
@@ -30,7 +30,7 @@ def test_default_runs_scheduler_not_oneshot(monkeypatch):
     run_test = MagicMock()
     schedule = MagicMock()
     monkeypatch.setattr(entry, "_run_test", run_test)
-    monkeypatch.setattr(entry.scheduler, "schedule_daily_message", schedule)
+    monkeypatch.setattr(entry.scheduler, "run", schedule)
 
     assert entry.main([]) == 0
     schedule.assert_called_once()

@@ -28,16 +28,35 @@
   `None`. A new call that can crash the scheduler is a blocker.
 
 ## Timezone
-- Scheduling passes the zone to `schedule.every().day.at(time, tz)` (correct on a local or UTC/Docker
-  clock); no manual local→UTC math, which is wrong when the host clock isn't UTC. The message shows
-  the local zone. No second, inline source of "now".
+- The daily job is registered with a **tz-aware** `time` on PTB's `JobQueue`
+  (`run_daily(cb, time=parse_daily_time(hhmm, tz))`) — correct on a local or UTC/Docker clock; no
+  manual local→UTC math, which is wrong when the host clock isn't UTC. The message shows the local
+  zone. No second, inline source of "now".
 
 ## Telegram
 - `send_message` uses the intended `parse_mode`; API fields interpolated into the message are HTML
   `html.escape`d (the message uses HTML parse mode).
-- The `Bot` is used through its async lifecycle (`async with bot:` → initialize/shutdown); failures
-  entering the context degrade gracefully, never raising out of `send_weather_message`.
+- The `Bot` is used through its async lifecycle (`async with bot:` → initialize/shutdown) **only when
+  this code owns it**; a Bot borrowed from a running `Application` is passed with `manage_bot=False`
+  and never shut down (that would stop polling). Failures entering the context degrade gracefully,
+  never raising out of `send_weather_message`.
 - The `Bot` is not constructed or called in a test without a mock.
+
+## Commands / authorization
+- **Every** command handler gates on `commands.is_authorized()` before doing any work; an
+  unauthorized chat gets the refusal and triggers **no** OpenWeatherMap call. A new handler missing
+  the gate, or calling the API before it, is a blocker: the bot is publicly reachable and the API key
+  has a limited quota.
+- Handlers read `settings`/`tz` from `context.bot_data`, not module-level globals. Per-chat state
+  (e.g. the `/time` cooldown) lives in `chat_data`; a module-level dict would leak across chats and
+  is a blocker.
+- A quota-spending command is rate limited **after** the auth gate, with the timestamp recorded only
+  once the reply was served (recording before/on failure locks the user out for the whole cooldown).
+  Elapsed time uses `time.monotonic()`, not `time.time()` — a system-clock jump must not lock it out.
+- Handler failures are logged and answered with a generic Spanish message — no internal detail
+  (exception text, token, URL) reaches the chat.
+- Tests cover both sides of the gate: the owner path **and** a stranger path asserting the fetch was
+  never awaited.
 
 ## Packaging / versioning
 - Version stays single-sourced in `pyproject.toml`; no second hardcoded version string.

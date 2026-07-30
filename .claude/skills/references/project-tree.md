@@ -22,13 +22,15 @@ PWeatherMessageBot/
 │       ├── weather.py                # OpenWeatherMap async client
 │       ├── formatting.py             # Message building (Spanish) + rain calc + emoji
 │       ├── telegram_sender.py        # Send + error notification
-│       └── scheduler.py              # Timezone-aware daily job registration + loop
+│       ├── commands.py               # /time, /start handlers + chat_id authorization gate
+│       └── scheduler.py              # Application: daily JobQueue job + command polling
 ├── tests/
 │   ├── conftest.py
 │   ├── test_config.py
 │   ├── test_weather.py
 │   ├── test_formatting.py
 │   ├── test_telegram_sender.py
+│   ├── test_commands.py
 │   └── test_scheduler.py
 ├── .plan/                            # Plans (planner→implementer)
 │   └── <usecase>/<type>/<slug>.md    # usecase: weather|telegram|scheduling|general; type: feat|fix|refactor

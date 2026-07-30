@@ -11,4 +11,5 @@ services:
       - CITY=${CITY:-Madrid,ES}
       - TIME_SEND_MESSAGE=${TIME_SEND_MESSAGE:-07:00}
       - TIMEZONE=${TIMEZONE:-Europe/Madrid}
+      - TIME_COMMAND_COOLDOWN=${TIME_COMMAND_COOLDOWN:-30}
     restart: unless-stopped

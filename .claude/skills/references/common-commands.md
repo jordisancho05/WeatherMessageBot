@@ -11,7 +11,7 @@ pip install -e ".[dev]"                   # editable install + dev tools (pytest
 
 ## Run
 ```powershell
-python main.py                             # simplest: run the daily scheduler
+python main.py                             # simplest: run the bot (daily job + command polling)
 python main.py --test                      # send one message now and exit
 # equivalent alternatives:
 python -m weather_message_bot
